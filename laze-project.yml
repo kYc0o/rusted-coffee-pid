@@ -1,0 +1,12 @@
+imports:
+  - git:
+      url: https://github.com/ariel-os/ariel-os
+      tag: v0.2.1
+    dldir: ariel-os
+
+apps:
+  - name: rusted-coffee-pid
+    context:
+      - espressif-esp32-s3-devkitc-1
+    selects: 
+      - multi-core

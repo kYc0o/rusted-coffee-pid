@@ -14,6 +14,22 @@ Rust implementation for a PID controller on a Rancilio Silvia espresso machine, 
 
 ## Quick Start
 
+### Prerequisites
+
+- Rust toolchain with ESP32-S3 target support
+- `laze` build tool (Ariel OS project builder)
+- `espflash` for flashing to device
+- Connected ESP32-S3 DevKitC-1 board
+
+Go to the [Ariel-OS](https://ariel-os.github.io/ariel-os/dev/docs/book/getting-started.html) documentation to install everything you need, it's well described
+step by step.
+
+This project was created using [cargo-generate](https://github.com/cargo-generate/cargo-generate):
+```bash
+$ cargo generate --git https://github.com/ariel-os/ariel-os-template --name rusted-coffee-pid
+```
+so as soon as you have installed the build prerequisites you should be good to go
+
 ### Building
 
 ```bash
@@ -107,13 +123,6 @@ src/
     ├── ssd1306_async/         # Custom async SSD1306 driver
     └── tsic306_async/         # TSIC 306 sensor driver
 ```
-
-## Prerequisites
-
-- Rust toolchain with ESP32-S3 target support
-- `laze` build tool (Ariel OS project builder)
-- `espflash` for flashing to device
-- Connected ESP32-S3 DevKitC-1 board
 
 ## Troubleshooting
 

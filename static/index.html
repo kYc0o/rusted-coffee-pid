@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffee PID Controller</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .stat-value {
+            font-size: 2.2em;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-label {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .status-value {
+            color: #333;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .endpoint-info {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f0f4ff;
+            border-radius: 10px;
+            border: 1px solid #d0d8ff;
+        }
+        
+        .endpoint-info h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .endpoint {
+            background: white;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #333;
+            border-left: 3px solid #667eea;
+        }
+        
+        .endpoint:last-child {
+            margin-bottom: 0;
+        }
+        
+        .loading {
+            color: #999;
+            font-size: 0.9em;
+        }
+        
+        .error {
+            color: #e74c3c;
+            font-size: 0.9em;
+        }
+
+        .refresh-note {
+            text-align: center;
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>☕ Coffee PID</h1>
+        <p class="subtitle">ESP32-S3 Temperature Controller</p>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Current Temperature</div>
+                <div class="stat-value" id="temperature">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Status</div>
+                <div class="stat-value" id="device-status">--</div>
+            </div>
+        </div>
+        
+        <div class="status-card">
+            <div class="status-item">
+                <span class="status-label">Device</span>
+                <span class="status-value" id="device-name">--</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">HTTP Port</span>
+                <span class="status-value">80</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Uptime</span>
+                <span class="status-value" id="uptime">--</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Last Update</span>
+                <span class="status-value" id="last-update">--</span>
+            </div>
+        </div>
+        
+        <div class="endpoint-info">
+            <h3>📡 Available Endpoints</h3>
+            <div class="endpoint">GET /</div>
+            <div class="endpoint">GET /temperature</div>
+            <div class="endpoint">GET /status</div>
+        </div>
+        
+        <p class="refresh-note">This page auto-refreshes every 5 seconds</p>
+    </div>
+
+    <script>
+        async function updateData() {
+            try {
+                // Fetch temperature
+                const tempResponse = await fetch('/temperature');
+                const tempData = await tempResponse.json();
+                
+                const tempElement = document.getElementById('temperature');
+                if (tempData.temperature > -999) {
+                    tempElement.textContent = tempData.temperature.toFixed(1) + ' ' + tempData.unit;
+                    tempElement.classList.remove('error');
+                } else {
+                    tempElement.textContent = 'ERROR';
+                    tempElement.classList.add('error');
+                }
+                
+                // Fetch status
+                const statusResponse = await fetch('/status');
+                const statusData = await statusResponse.json();
+                
+                document.getElementById('device-status').textContent = statusData.status.toUpperCase();
+                document.getElementById('device-name').textContent = statusData.device;
+                document.getElementById('uptime').textContent = statusData.uptime_ms + ' ms';
+                
+                const now = new Date();
+                document.getElementById('last-update').textContent = now.toLocaleTimeString();
+                
+            } catch (error) {
+                console.error('Failed to fetch data:', error);
+                document.getElementById('temperature').textContent = 'N/A';
+                document.getElementById('temperature').classList.add('error');
+            }
+        }
+        
+        // Update immediately and then every 5 seconds
+        updateData();
+        setInterval(updateData, 5000);
+    </script>
+</body>
+</html>

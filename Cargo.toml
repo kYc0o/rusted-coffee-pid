@@ -1,0 +1,17 @@
+[package]
+name = "rusted-coffee-pid"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ariel-os = { path = "build/imports/ariel-os/src/ariel-os", features = ["i2c", "time"] }
+ariel-os-boards = { path = "build/imports/ariel-os/src/ariel-os-boards" }
+embedded-graphics = "0.8"
+embedded-hal-async = "1.0"
+embedded-hal = "0.2"
+tsic = "0.2"
+embassy-sync = { version = "0.5", features = ["defmt"] }
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+  'cfg(context, values(any()))',
+] }
